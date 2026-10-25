@@ -7,11 +7,13 @@ Penalties getPenalties(const Instance& instance){
     p.unnecessary_trips = instance.capacity;
     p.unvisited_required_edges = instance.capacity * 10.0;
     p.invalid_depots = instance.capacity * 10.0;
+    
+    return p;
 }
 
 FO evaluate(
-    vector<vector<vector<int>>> &routes,    // Vetor de rotas, por veiculo
-    vector<vector<double>>& dist,           // Matriz de distancias
+    const vector<vector<vector<int>>> &routes,    // Vetor de rotas, por veiculo
+    const vector<vector<double>>& dist,           // Matriz de distancias
     const double recharge_time,             // Tempo de recarga ao final da viagem 
     const Instance& instance                // Valores da instancia 
 ){
@@ -103,7 +105,7 @@ FO evaluate(
             }
 
             // Restricao 7: A duracao da viagem nao pode exceder a autonomia (capacity)
-            if (trip_duration > instance.capacity + __FLT64_EPSILON__){
+            if (trip_duration > instance.capacity + __DBL_EPSILON__){
                 fo.feasible = false;
                 fo.battery_excess += trip_duration - instance.capacity;
             }
@@ -131,15 +133,4 @@ FO evaluate(
     }
 
     return fo;
-}
-
-// Calcula a FO aplicada de punicoes em caso de violacao de restricoes 
-FO fitness(
-    vector<vector<vector<int>>> &routes,    // Vetor de rotas, por veiculo
-    vector<vector<double>>& dist,           // Matriz de distancias
-    const double recharge_time,             // Tempo de recarga ao final da viagem
-    const Instance& instance,               // Valores da instancia 
-    const Penalties& penalties              // Penalidades para solucoes invalidas
-){
-    
 }

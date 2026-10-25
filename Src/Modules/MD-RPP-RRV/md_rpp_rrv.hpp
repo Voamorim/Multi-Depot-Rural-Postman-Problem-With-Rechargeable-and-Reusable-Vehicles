@@ -47,8 +47,8 @@ Penalties getPenalties(const Instance& instance);
 
 // Calcula estritamente a FO
 FO evaluate(
-    vector<vector<vector<int>>> &routes,    // Vetor de rotas, por veiculo
-    vector<vector<double>>& dist,           // Matriz de distancias
+    const vector<vector<vector<int>>> &routes,    // Vetor de rotas, por veiculo
+    const vector<vector<double>>& dist,           // Matriz de distancias
     const double recharge_time,             // Tempo de recarga ao final da viagem 
     const Instance& instance                // Valores da instancia 
 );
