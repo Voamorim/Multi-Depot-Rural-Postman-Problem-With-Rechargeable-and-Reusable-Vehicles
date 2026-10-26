@@ -1,6 +1,8 @@
 #ifndef GRAPH_HPP
 #define GRAPH_HPP
 
+#include "../IO/io.hpp"
+
 #include <vector>
 #include <iostream>
 #include <limits>
@@ -30,6 +32,8 @@ class Graph {
         void calcDistMatrix(void);
         vector<vector<double>>& getDistMatrix(void);
         vector<int> getPath(const int src, const int dest);
+
+        void buildGraph(const Instance& instance);
 
         Graph();
         Graph(const int num_vertices);
