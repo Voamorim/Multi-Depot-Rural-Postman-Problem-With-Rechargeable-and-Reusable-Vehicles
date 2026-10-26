@@ -49,14 +49,18 @@ Instance readInstance(ifstream& input_file)
         if(req_edges.find(make_pair(v, u)) != req_edges.end()){
             instance.edges[i].required = true;
             instance.required_edges.push_back(i);
+        } else {
+            instance.edges[i].required = false;
         }
     }
 
     // Define os depositos iniciais de cada veiculo (atribuicao ciclica)
-    instance.initial_depots.resize(instance.n_vehicles);
-    for(int vehicle = 0; vehicle < instance.n_vehicles; ++vehicle){
-        instance.initial_depots[vehicle] = depots[vehicle % instance.n_depots];
+    if(instance.n_depots > 0){
+        instance.initial_depots.resize(instance.n_vehicles);
+        for(int vehicle = 0; vehicle < instance.n_vehicles; ++vehicle){
+            instance.initial_depots[vehicle] = depots[vehicle % instance.n_depots];
+        }
     }
-
+    
     return instance;
 }
