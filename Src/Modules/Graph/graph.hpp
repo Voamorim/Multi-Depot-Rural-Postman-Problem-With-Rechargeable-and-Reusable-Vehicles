@@ -36,7 +36,6 @@ class Graph {
         void buildGraph(const Instance& instance);
 
         Graph();
-        Graph(const int num_vertices);
 };
 
 #endif
