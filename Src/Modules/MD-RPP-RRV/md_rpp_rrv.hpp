@@ -2,11 +2,12 @@
 #define MD_RPP_RRV_HPP
 
 #include "../IO/io.hpp"
+#include "../Utils/utils.hpp"
+#include "../Graph/graph.hpp"
 
 #include <vector>
 #include <iostream>
 #include <set>
-#include <algorithm>
 
 using namespace std;
 
@@ -48,8 +49,7 @@ Penalties getPenalties(const Instance& instance);
 // Calcula estritamente a FO
 FO evaluate(
     const vector<vector<vector<int>>> &routes,    // Vetor de rotas, por veiculo
-    const vector<vector<double>>& dist,           // Matriz de distancias
-    const double recharge_time,             // Tempo de recarga ao final da viagem 
+    Graph& graph, 
     const Instance& instance                // Valores da instancia 
 );
 

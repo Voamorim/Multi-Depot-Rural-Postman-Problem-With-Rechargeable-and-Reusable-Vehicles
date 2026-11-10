@@ -32,6 +32,8 @@ struct Instance {
     vector<Edge> edges;
 
     vector<int> initial_depots;
+
+    double recharge_time;
 };
 
 Instance readInstance(ifstream& input_file);

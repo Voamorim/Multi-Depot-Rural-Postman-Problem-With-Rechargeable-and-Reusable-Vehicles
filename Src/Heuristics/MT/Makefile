@@ -16,6 +16,7 @@ TIMER_PATH                      = $(MODULES_PATH)/Timer
 UTILS_PATH                      = $(MODULES_PATH)/Utils
 IO_PATH                         = $(MODULES_PATH)/IO
 GRAPH_PATH                      = $(MODULES_PATH)/Graph
+MD_RPP_RRV_PATH					= $(MODULES_PATH)/MD-RPP-RRV
 MT_PATH                         = $(MT_MODULES_PATH)
 
 SRCS                            = $(filter-out $(MAIN_FILE).cpp ./$(MAIN_FILE).cpp, $(wildcard *.cpp))
@@ -23,6 +24,7 @@ SRCS_TIMER                      = $(wildcard $(TIMER_PATH)/*.cpp)
 SRCS_UTILS                      = $(wildcard $(UTILS_PATH)/*.cpp)
 SRCS_IO                         = $(wildcard $(IO_PATH)/*.cpp)
 SRCS_GRAPH                      = $(wildcard $(GRAPH_PATH)/*.cpp)
+SRCS_MD_RPP_RRV					= $(wildcard $(MD_RPP_RRV_PATH)/*.cpp)
 SRCS_MT                        	= $(wildcard $(MT_PATH)/*.cpp)
 
 OBJS_MAIN                       = $(BINARYDIR)/$(MAIN_FILE).o
@@ -31,11 +33,12 @@ OBJS_TIMER                      = $(patsubst %.cpp, $(BINARYDIR)/timer_%.o, $(no
 OBJS_UTILS                      = $(patsubst %.cpp, $(BINARYDIR)/utils_%.o, $(notdir $(SRCS_UTILS)))
 OBJS_IO                         = $(patsubst %.cpp, $(BINARYDIR)/io_%.o, $(notdir $(SRCS_IO)))
 OBJS_GRAPH                      = $(patsubst %.cpp, $(BINARYDIR)/graph_%.o, $(notdir $(SRCS_GRAPH)))
+OBJS_MD_RPP_RRV					= $(patsubst %.cpp, $(BINARYDIR)/md_rpp_rrv_%.o, $(notdir $(SRCS_MD_RPP_RRV)))
 OBJS_MT                         = $(patsubst %.cpp, $(BINARYDIR)/mt%.o, $(notdir $(SRCS_MT)))
 
-OBJS							= $(OBJS_LOCAL) $(OBJS_TIMER) $(OBJS_UTILS) $(OBJS_IO) $(OBJS_GRAPH) $(OBJS_MT) $(OBJS_MAIN)
+OBJS							= $(OBJS_LOCAL) $(OBJS_TIMER) $(OBJS_UTILS) $(OBJS_IO) $(OBJS_GRAPH) $(OBJS_MD_RPP_RRV) $(OBJS_MT) $(OBJS_MAIN)
 
-INCLUDES						= -I. -I$(TIMER_PATH) -I$(UTILS_PATH) -I$(IO_PATH) -I$(GRAPH_PATH) -I$(MT_PATH)
+INCLUDES						= -I. -I$(TIMER_PATH) -I$(UTILS_PATH) -I$(IO_PATH) -I$(GRAPH_PATH) -I$(MD_RPP_RRV_PATH) -I$(MT_PATH)
 
 .PHONY: all clean run
 
@@ -67,6 +70,10 @@ $(BINARYDIR)/io_%.o: $(IO_PATH)/%.cpp | $(BINARYDIR)
 
 # Graph files
 $(BINARYDIR)/graph_%.o: $(GRAPH_PATH)/%.cpp | $(BINARYDIR)
+	$(COMPILER) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+# MD-RPP-RRV files
+$(BINARYDIR)/md_rpp_rrv_%.o: $(MD_RPP_RRV_PATH)/%.cpp | $(BINARYDIR)
 	$(COMPILER) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 # MT files

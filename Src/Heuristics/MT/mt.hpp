@@ -4,6 +4,7 @@
 #include "../../Modules/Graph/graph.hpp"
 #include "../../Modules/IO/io.hpp"
 #include "../../Modules/MD-RPP-RRV/md_rpp_rrv.hpp"
+#include "../../Modules/Utils/utils.hpp"
 
 #include <vector>
 #include <tuple>
@@ -14,7 +15,6 @@
 using namespace std;
 
 tuple<FO, vector<vector<vector<int>>>> MT(
-    const double recharge_time, 
     Graph& graph, 
     const Instance& instance
 );

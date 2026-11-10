@@ -13,8 +13,7 @@ Penalties getPenalties(const Instance& instance){
 
 FO evaluate(
     const vector<vector<vector<int>>> &routes,    // Vetor de rotas, por veiculo
-    const vector<vector<double>>& dist,           // Matriz de distancias
-    const double recharge_time,             // Tempo de recarga ao final da viagem 
+    Graph& graph, 
     const Instance& instance                // Valores da instancia 
 ){
     FO fo;
@@ -90,7 +89,7 @@ FO evaluate(
             for(int i = 0; i < trip_size - 1; ++i){
                 int v = trip[i];
                 int u = trip[i+1];
-                double w = dist[v][u];
+                double w = graph.getEdge(v, u);
                 
                 trip_duration += w;
 
@@ -105,7 +104,7 @@ FO evaluate(
             }
 
             // Restricao 7: A duracao da viagem nao pode exceder a autonomia (capacity)
-            if (trip_duration > instance.capacity + __DBL_EPSILON__){
+            if (trip_duration > instance.capacity + EPS){
                 fo.feasible = false;
                 fo.battery_excess += trip_duration - instance.capacity;
             }
@@ -118,7 +117,7 @@ FO evaluate(
         // Restricao 6: Adiciona tempos de recarga entre viagens
         double total_recharge_time = 0.0;
         if(fo.trips_counter[ivehicle] > 1){
-            total_recharge_time = (fo.trips_counter[ivehicle] - 1) * recharge_time;
+            total_recharge_time = (fo.trips_counter[ivehicle] - 1) * instance.recharge_time;
         }
         fo.vehicle_times[ivehicle] = vehicle_total_duration + total_recharge_time;
 
@@ -129,7 +128,7 @@ FO evaluate(
     // Restricao 10: Todas as arestas obrigatorias devem ser visitadas
     if(!remaining_required_edges.empty()){
         fo.feasible = false;
-        fo.unvisited_required_edges += 1;
+        fo.unvisited_required_edges += remaining_required_edges.size();
     }
 
     return fo;

@@ -27,11 +27,11 @@ Instance readInstance(ifstream& input_file)
 
     // Arestas Obrigatorias
     input_file >> instance.n_required_edges;
-    set<pair<int, int>> req_edges;
+    vector<pair<int, int>> req_edges(instance.n_required_edges);
     for(int i = 0; i < instance.n_required_edges; ++i){
         int v, u; 
         input_file >> v >> u;
-        req_edges.insert(make_pair(v, u));
+        req_edges[i] = make_pair(v, u);
     }
     
     // Arestas
@@ -45,22 +45,69 @@ Instance readInstance(ifstream& input_file)
 
         instance.edges[i].from = v;
         instance.edges[i].to = u;
+        instance.edges[i].required = false;
+    }
 
-        if(req_edges.find(make_pair(v, u)) != req_edges.end()){
-            instance.edges[i].required = true;
-            instance.required_edges.push_back(i);
+    // Associa cada aresta obrigatoria ao seu indice
+    for(int r = 0; r < instance.n_required_edges; ++r){
+        auto [req_v, req_u] = req_edges[r];
+        int found_idx = -1;
+
+        for(int i = 0; i < instance.m; ++i){
+            int v = instance.edges[i].from;
+            int u = instance.edges[i].to;
+
+            if(v == req_v and u == req_u){
+                found_idx = i;
+                break;
+            }
+            if(!instance.directed and v == req_u and u == req_v){
+                found_idx = i;
+                break;
+            }
+        }
+
+        // Caso no Set C a aresta obrigatoria tenha sido especificada somente no sentido inverso
+        if(found_idx == -1 and instance.directed){
+            for(int i = 0; i < instance.m; ++i){
+                int v = instance.edges[i].from;
+                int u = instance.edges[i].to;
+                if(v == req_u and u == req_v){
+                    found_idx = i;
+                    break;
+                }
+            }
+        }
+
+        if(found_idx != -1){
+            instance.edges[found_idx].required = true;
+            instance.required_edges.push_back(found_idx);
         } else {
-            instance.edges[i].required = false;
+            cout << "ERRO: Aresta obrigatoria (" << req_v << ", " << req_u << ") nao encontrada dentre as arestas do grafo." << endl;
         }
     }
 
-    // Define os depositos iniciais de cada veiculo (atribuicao ciclica)
     if(instance.n_depots > 0){
-        instance.initial_depots.resize(instance.n_vehicles);
+        vector<vector<int>> vehicles_per_depot(instance.n_depots);
+        int p = 0;
         for(int vehicle = 0; vehicle < instance.n_vehicles; ++vehicle){
-            instance.initial_depots[vehicle] = depots[vehicle % instance.n_depots];
+            if(p > instance.n_depots - 1){
+                p = 0;
+            }
+            vehicles_per_depot[p].push_back(depots[p]);
+            p += 1;
+        }
+
+        for(int j = 0; j < instance.n_depots; ++j){
+            for(int d : vehicles_per_depot[j]){
+                instance.initial_depots.push_back(d);
+            }
         }
     }
-    
+ 
+
+    // IMPORTANTE: isso só vale para as instâncias do Set A 
+    instance.recharge_time = 2.0 * instance.capacity;    
+
     return instance;
 }
