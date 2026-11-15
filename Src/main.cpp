@@ -1,5 +1,5 @@
-#include "../../Modules/Graph/graph.hpp"
-#include "../../Modules/IO/io.hpp"
+#include "graph.hpp"
+#include "instance.hpp"
 #include "mt.hpp"
 
 #include <vector>
@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const string instances_path = "../../../Instances/ParsedInstances/Instances/";
+const string instances_path = "../Instances/ParsedInstances/Instances/";
 
 void debugInstance(const Instance& instance);
 
@@ -51,32 +51,4 @@ int main(){
     cout << "FO: " << fo.makespan << endl;
     cout << "Feasible? " << fo.feasible << endl;
     return 0;
-}
-
-void debugInstance(const Instance& instance){
-    cout << "=-=-=-=-=-=-=- INSTANCIA =-=-=-=-=-=-=-=-" << endl;
-    cout << "Directed: " << instance.directed << endl;
-    cout << "n: " << instance.n << endl << endl;;
-    cout << "N depots: " << instance.n_depots << endl;
-    cout << "Depots:";
-    for(auto &d : instance.depots) cout << ' ' << d;
-    cout << endl << endl;
-    cout << "N vehicles: " << instance.n_vehicles << endl;
-    cout << "Capacity: " << instance.capacity << endl << endl;
-    cout << "N required edges: " << instance.n_required_edges << endl;
-    cout << "req_edges.size " << instance.required_edges.size() << endl;
-    cout << "Required edges:";
-    for(auto & e : instance.required_edges) cout << ' ' << e;
-    cout << endl << endl;
-    cout << "M: " << instance.m << endl;
-    cout << "Edges: " << endl;
-    for(auto & e : instance.edges){
-        cout << '\t' << e.from << ' ' << e.to << ' ' << e.weight << endl;
-    }
-    cout << endl; 
-    cout << "Initial depots:"; 
-    for(auto i : instance.initial_depots) cout << ' ' << i;
-    cout << endl;
-    cout << "Recharge time: " << instance.recharge_time << endl;
-    cout << endl;
 }

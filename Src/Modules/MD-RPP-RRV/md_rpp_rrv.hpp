@@ -1,9 +1,9 @@
 #ifndef MD_RPP_RRV_HPP
 #define MD_RPP_RRV_HPP
 
-#include "../IO/io.hpp"
-#include "../Utils/utils.hpp"
-#include "../Graph/graph.hpp"
+#include "instance.hpp"
+#include "utils.hpp"
+#include "graph.hpp"
 
 #include <vector>
 #include <iostream>

@@ -1,5 +1,5 @@
-#ifndef IO_HPP
-#define IO_HPP
+#ifndef INSTANCE_HPP
+#define INSTANCE_HPP
 
 #include <vector>
 #include <iostream>
@@ -39,5 +39,7 @@ struct Instance {
 // Por padrão, usa o tempo de recarga = 2 * capacidade
 // Usa o tempo de recarga customizado se especificado
 Instance readInstance(ifstream& input_file, double recharge_time=-1.0);
+
+void debugInstance(const Instance& instance);
 
 #endif

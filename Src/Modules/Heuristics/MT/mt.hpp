@@ -1,10 +1,10 @@
 #ifndef MT_HPP
 #define MT_HPP
 
-#include "../../Modules/Graph/graph.hpp"
-#include "../../Modules/IO/io.hpp"
-#include "../../Modules/MD-RPP-RRV/md_rpp_rrv.hpp"
-#include "../../Modules/Utils/utils.hpp"
+#include "graph.hpp"
+#include "instance.hpp"
+#include "md_rpp_rrv.hpp"
+#include "utils.hpp"
 
 #include <vector>
 #include <tuple>

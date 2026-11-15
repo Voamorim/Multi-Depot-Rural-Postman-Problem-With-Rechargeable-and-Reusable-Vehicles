@@ -1,7 +1,7 @@
 #ifndef GRAPH_HPP
 #define GRAPH_HPP
 
-#include "../IO/io.hpp"
+#include "instance.hpp"
 
 #include <vector>
 #include <iostream>
