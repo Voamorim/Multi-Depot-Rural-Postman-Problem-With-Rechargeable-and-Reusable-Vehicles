@@ -36,6 +36,8 @@ struct Instance {
     double recharge_time;
 };
 
-Instance readInstance(ifstream& input_file);
+// Por padrão, usa o tempo de recarga = 2 * capacidade
+// Usa o tempo de recarga customizado se especificado
+Instance readInstance(ifstream& input_file, double recharge_time=-1.0);
 
 #endif

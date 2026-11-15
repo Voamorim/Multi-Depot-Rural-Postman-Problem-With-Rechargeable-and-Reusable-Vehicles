@@ -1,8 +1,8 @@
 #include "io.hpp"
 
-Instance readInstance(ifstream& input_file)
+Instance readInstance(ifstream& input_file, double recharge_time)
 {
-    Instance instance; 
+    Instance instance;
   
     // Direcionado
     input_file >> instance.directed;
@@ -107,7 +107,10 @@ Instance readInstance(ifstream& input_file)
  
 
     // IMPORTANTE: isso só vale para as instâncias do Set A 
-    instance.recharge_time = 2.0 * instance.capacity;    
+    if(recharge_time == -1)
+        instance.recharge_time = 2.0 * instance.capacity;    
+    else
+        instance.recharge_time = recharge_time;
 
     return instance;
 }
