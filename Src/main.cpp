@@ -1,6 +1,7 @@
 #include "graph.hpp"
 #include "instance.hpp"
 #include "mt.hpp"
+#include "args.hpp"
 
 #include <vector>
 #include <set>
@@ -11,9 +12,7 @@
 
 using namespace std;
 
-const string instances_path = "../Instances/ParsedInstances/Instances/";
-
-int main(){
+int main(int argc, char** argv){
 
     // Estes arquivos ainda nao batem com os resultados do artigo
     //string input_file_path = instances_path + "SetA/A5.txt";
@@ -21,7 +20,7 @@ int main(){
     //string input_file_path = instances_path + "SetA/A13.txt";
     //string input_file_path = instances_path + "SetA/A20.txt";
 
-    string input_file_path = instances_path + "SetA/A23.txt";
+    string input_file_path = Args().getInputFile(argc, argv);
 
     // Arquivos dos Sets B e C ainda nao funcionam. Verificar o pq
     //string input_file_path = instances_path + "SetB/B3.txt";
