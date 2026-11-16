@@ -369,28 +369,12 @@ tuple<FO, vector<vector<vector<int>>>> MT(
         }
     }
 
-    cout << "MT times: " << endl;
-    for(int i = 0; i < instance.n_vehicles; ++i){
-        if(vehicle_times[i] != numeric_limits<double>::max())
-            cout << '\t' << vehicle_times[i] << endl;
-        else
-            cout << '\t' << "INF" << endl;
-    }
-
     FO fo;
     fo = evaluate(
         routes,
         graph,
         instance
     );
-    
-    cout << "FO times: " << endl;
-    for(int i = 0; i < instance.n_vehicles; ++i){
-        if(fo.vehicle_times[i] != numeric_limits<double>::max())
-            cout << '\t' << fo.vehicle_times[i] << endl;
-        else
-            cout << '\t' << "INF" << endl;
-    }
 
     return make_tuple(fo, routes);
 }
