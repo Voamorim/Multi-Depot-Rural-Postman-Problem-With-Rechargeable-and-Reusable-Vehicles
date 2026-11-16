@@ -48,9 +48,32 @@ Penalties getPenalties(const Instance& instance);
 
 // Calcula estritamente a FO
 FO evaluate(
-    const vector<vector<vector<int>>> &routes,    // Vetor de rotas, por veiculo
+    const vector<vector<vector<int>>> &routes,      // Vetor de rotas, por veiculo
     Graph& graph, 
-    const Instance& instance                // Valores da instancia 
+    const Instance& instance                        // Valores da instancia 
+);
+
+enum NodeType {
+    DEPOT,
+    REQ_EDGE
+};
+
+struct Node {
+    NodeType type;
+    int v;              // Nó de origem da aresta obrigatória (depot_idx se type==DEPOT)
+    int u;              // Nó de destino da aresta obrigratória (depot_idx se type==DEPOT)
+    int edge_id;        // Identificador da aresta (-1 se for deposito)
+};
+
+vector<vector<Node>> convert3dSolutionTo2d(
+    const vector<vector<vector<int>>> &routes,
+    const Instance& instance
+);
+
+vector<vector<vector<int>>> convert2dSolutionTo3d(
+    const vector<vector<Node>> &routes,
+    Graph& graph,
+    const Instance& instance
 );
 
 #endif

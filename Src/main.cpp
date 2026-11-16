@@ -13,8 +13,6 @@ using namespace std;
 
 const string instances_path = "../Instances/ParsedInstances/Instances/";
 
-void debugInstance(const Instance& instance);
-
 int main(){
 
     // Estes arquivos ainda nao batem com os resultados do artigo
@@ -23,7 +21,7 @@ int main(){
     //string input_file_path = instances_path + "SetA/A13.txt";
     //string input_file_path = instances_path + "SetA/A20.txt";
 
-    string input_file_path = instances_path + "SetA/A1.txt";
+    string input_file_path = instances_path + "SetA/A23.txt";
 
     // Arquivos dos Sets B e C ainda nao funcionam. Verificar o pq
     //string input_file_path = instances_path + "SetB/B3.txt";
@@ -50,5 +48,9 @@ int main(){
 
     cout << "FO: " << fo.makespan << endl;
     cout << "Feasible? " << fo.feasible << endl;
+
+    // Converte para uma representacao mais facil de varrer a vizinhanca
+    vector<vector<Node>> solution2d = convert3dSolutionTo2d(routes, instance);
+
     return 0;
 }
