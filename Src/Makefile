@@ -42,6 +42,7 @@ $(BINARYDIR)/$(MAIN_FILE).o: $(MAIN_FILE).cpp | $(BINARYDIR)
 
 # Local files
 $(BINARYDIR)/%.o: %.cpp | $(BINARYDIR)
+	@mkdir -p $(@D)
 	$(COMPILER) $(INCLUDES) $(FLAGS) -MMD -MP -c $< -o $@
 
 # Module files
