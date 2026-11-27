@@ -22,9 +22,10 @@ void invertRequiredEdge(
     mt19937& gen
 );
 
-void depotSwap(vector<Node> &trip, 
+void depotSwap(
+    vector<Node> &trip, 
     const vector<int> &depots_idx, 
-    Instance& instance, 
+    const Instance& instance, 
     mt19937& gen
 );
 

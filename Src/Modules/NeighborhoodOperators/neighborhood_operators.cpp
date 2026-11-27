@@ -69,9 +69,10 @@ void invertRequiredEdge(
 
 // Troca um depósito intermediário por um depósito qualquer pertencente
 // ao conjunto de depósitos
-void depotSwap(vector<Node> &trip, 
+void depotSwap(
+    vector<Node> &trip, 
     const vector<int> &depots_idx, 
-    Instance& instance, 
+    const Instance& instance, 
     mt19937& gen
 ){
     if(depots_idx.size() <= 2 or instance.depots.size() < 2) return;
@@ -81,7 +82,7 @@ void depotSwap(vector<Node> &trip,
     int depot_node_pos = depots_idx[i_depot];
 
     // Troca o depósito por outro depósito qualquer
-    int new_depot_idx = getRandomInteger(1, instance.depots_vec.size()-2, gen);
+    int new_depot_idx = getRandomInteger(0, instance.depots_vec.size()-1, gen);
     int new_depot = instance.depots_vec[new_depot_idx];
 
     trip[depot_node_pos].v = new_depot;
