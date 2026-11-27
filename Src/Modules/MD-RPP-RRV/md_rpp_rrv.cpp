@@ -1,163 +1,17 @@
 #include "md_rpp_rrv.hpp"
 
-Penalties getPenalties(const Instance& instance){
-    Penalties p;
-    p.missing_edges = instance.capacity * 10.0;
-    p.battery_excess = 100.0;
-    p.unnecessary_trips = instance.capacity;
-    p.unvisited_required_edges = instance.capacity * 10.0;
-    p.invalid_depots = instance.capacity * 10.0;
-    
-    return p;
-}
+int isRequiredEdge(const pair<int, int> &edge, const Instance& instance);
 
-FO evaluate(
-    const vector<vector<vector<int>>> &routes,    // Vetor de rotas, por veiculo
-    Graph& graph, 
-    const Instance& instance                // Valores da instancia 
-){
-    FO fo;
-    fo.makespan = 0.0;
-    fo.feasible = true;
-    fo.trips_counter.assign(instance.n_vehicles, 0);
-    fo.vehicle_times.assign(instance.n_vehicles, 0.0);
-
-    // Conjunto de vertices obrigatorios ainda nao visitados
-    set<pair<int, int>> remaining_required_edges;
-    for (const int i_edge : instance.required_edges){
-        const Edge& edge = instance.edges[i_edge];
-
-        pair<int, int> e;
-
-        if(!instance.directed and edge.from > edge.to){
-            e = make_pair(edge.to, edge.from);
-        } else {
-            e = make_pair(edge.from, edge.to);
-        }
-            
-        remaining_required_edges.insert(e);
-    }
-
-    for(int ivehicle = 0; ivehicle < instance.n_vehicles; ++ivehicle){
-        const vector<vector<int>>& trips = routes[ivehicle];
-        double vehicle_total_duration = 0.0;
-        int previous_end_depot = -1; // Deposito onde o ultimo percurso terminou
-
-        for(int t = 0; t < trips.size(); ++t){
-            const vector<int>& trip = trips[t];
-            
-            if(trip.empty()) continue;
-
-            int trip_size = trip.size();
-
-            // Restricao 2: Nao podem existir viagens desnecessarias
-            if(trip_size < 2){
-                fo.feasible = false;
-                fo.unnecessary_trips += 1;
-                continue;
-            }
-
-            int starting_depot = trip[0];
-            int end_depot = trip[trip_size - 1];
-            
-            // Restricao 1: Na primeira viagem, o veiculo deve partir obrigatoriamente
-            //              do seu deposito de origem designado.
-            if(t == 0 and starting_depot != instance.initial_depots[ivehicle]){
-                fo.feasible = false;
-                fo.invalid_depots += 1;
-            }
-
-            // Restricao 5: Cada viagem deve comecar e terminar em depositos
-            if(instance.depots.find(starting_depot) == instance.depots.end()){
-                fo.feasible = false;
-                fo.invalid_depots += 1;
-            }
-            if(instance.depots.find(end_depot) == instance.depots.end()){
-                fo.feasible = false;
-                fo.invalid_depots += 1;
-            }
-
-            // Restricao 4: A viagem t deve comecar no deposito em que a viagem
-            //              t-1 terminou.
-            if(previous_end_depot != -1 and starting_depot != previous_end_depot){
-                fo.feasible = false;
-                fo.invalid_depots += 1;
-            }
-
-            // Computa a duracao da viagem
-            double trip_duration = 0.0;
-            for(int i = 0; i < trip_size - 1; ++i){
-                int v = trip[i];
-                int u = trip[i+1];
-                double w = graph.getEdge(v, u);
-                
-                trip_duration += w;
-
-                // Remove a aresta da lista de obrigatorias caso ela seja obrigatoria
-                pair<int, int> e;
-                if (!instance.directed and v > u) {
-                    e = make_pair(u, v);
-                } else {
-                    e = make_pair(v, u);
-                }
-                remaining_required_edges.erase(e);
-            }
-
-            // Restricao 7: A duracao da viagem nao pode exceder a autonomia (capacity)
-            if (trip_duration > instance.capacity + EPS){
-                fo.feasible = false;
-                fo.battery_excess += trip_duration - instance.capacity;
-            }
-
-            vehicle_total_duration += trip_duration;
-            previous_end_depot = end_depot;
-            fo.trips_counter[ivehicle] += 1;
-        }
-
-        // Restricao 6: Adiciona tempos de recarga entre viagens
-        double total_recharge_time = 0.0;
-        if(fo.trips_counter[ivehicle] > 1){
-            total_recharge_time = (fo.trips_counter[ivehicle] - 1) * instance.recharge_time;
-        }
-        fo.vehicle_times[ivehicle] = vehicle_total_duration + total_recharge_time;
-
-        // Makespan: tempo maximo gasto entre todos os veiculos
-        fo.makespan = max(fo.makespan, fo.vehicle_times[ivehicle]);
-    }
-
-    // Restricao 10: Todas as arestas obrigatorias devem ser visitadas
-    if(!remaining_required_edges.empty()){
-        fo.feasible = false;
-        fo.unvisited_required_edges += remaining_required_edges.size();
-    }
-
-    return fo;
-}
-
-int isRequiredEdge(
-    const pair<int, int> &edge,
-    const Instance& instance
-){
-    for(int required_edge_idx : instance.required_edges){
-        const Edge& req_edge = instance.edges[required_edge_idx];
-
-        if(req_edge.from == edge.first and req_edge.to == edge.second){
-            return required_edge_idx;
-        }
-
-        if(!instance.directed and req_edge.from == edge.second and req_edge.to == edge.first){
-            return required_edge_idx;
-        }
-    }
-
-    return -1;
-}
-
-vector<vector<Node>> convert3dSolutionTo2d(
+Solution2D convert3dSolutionTo2d(
     const vector<vector<vector<int>>> &routes,
     const Instance& instance
 ){
-    vector<vector<Node>> solution(instance.n_vehicles);
+    Solution2D solution;
+    solution.vechicle_routes.resize(instance.n_vehicles);
+    solution.depots_idx.resize(instance.n_vehicles);
+    solution.req_edges_idx.resize(instance.n_vehicles);
+
+    vector<vector<Node>>& vehicle_routes = solution.vechicle_routes;
     set<int> covered_required_edges;
 
     for(int vehicle = 0; vehicle < instance.n_vehicles; ++vehicle){
@@ -167,7 +21,10 @@ vector<vector<Node>> convert3dSolutionTo2d(
         if(vehicle_trips.empty()){
             int initial_depot = instance.initial_depots[vehicle];
             Node new_node = {DEPOT, initial_depot, initial_depot, -1};
-            solution[vehicle].push_back(new_node);
+            vehicle_routes[vehicle].push_back(new_node);
+
+            // Marca a posição do depósito na rota
+            //solution.depots_idx[vehicle].push_back(vehicle_routes[vehicle].size()-1);
             continue;
         }
 
@@ -181,7 +38,10 @@ vector<vector<Node>> convert3dSolutionTo2d(
             if(t == 0){
                 int initial_depot = trip[0];
                 Node new_node = {DEPOT, initial_depot, initial_depot, -1};
-                solution[vehicle].push_back(new_node);
+                vehicle_routes[vehicle].push_back(new_node);
+                
+                // Marca a posição do depósito na rota
+                solution.depots_idx[vehicle].push_back(vehicle_routes[vehicle].size()-1);
             }
 
             // Adiciona as arestas obrigatórias à solução
@@ -199,15 +59,21 @@ vector<vector<Node>> convert3dSolutionTo2d(
                 // if(req_edge_idx != -1 && covered_required_edges.find(req_edge_idx) == covered_required_edges.end()){
                 if(req_edge_idx != -1){
                     Node new_node = {REQ_EDGE, edge.first, edge.second, req_edge_idx};
-                    solution[vehicle].push_back(new_node);
+                    vehicle_routes[vehicle].push_back(new_node);
 
                     covered_required_edges.insert(req_edge_idx);
+                    
+                    // Marca a posição da aresta na rota
+                    solution.req_edges_idx[vehicle].push_back(vehicle_routes[vehicle].size()-1);
                 }
             }
 
             int final_depot = trip.back();
             Node new_node = {DEPOT, final_depot, final_depot, -1};
-            solution[vehicle].push_back(new_node);
+            vehicle_routes[vehicle].push_back(new_node);
+            
+            // Marca a posição do depósito na rota
+            solution.depots_idx[vehicle].push_back(vehicle_routes[vehicle].size()-1);
         }
     }
 
@@ -257,4 +123,57 @@ vector<vector<vector<int>>> convert2dSolutionTo3d(
     }
 
     return routes;
+}
+
+int isRequiredEdge(
+    const pair<int, int> &edge,
+    const Instance& instance
+){
+    for(int required_edge_idx : instance.required_edges){
+        const Edge& req_edge = instance.edges[required_edge_idx];
+
+        if(req_edge.from == edge.first and req_edge.to == edge.second){
+            return required_edge_idx;
+        }
+
+        if(!instance.directed and req_edge.from == edge.second and req_edge.to == edge.first){
+            return required_edge_idx;
+        }
+    }
+
+    return -1;
+}
+
+// Retorna qual o deposito mais proximo do vertice src 
+pair<double, int> getNearestDepot(
+    const int src, 
+    const vector<vector<double>> &dist_matrix, 
+    const Instance& instance
+){
+    double min_dist = numeric_limits<double>::max();
+    int depot_idx = -1;
+
+    for(const auto depot : instance.depots){
+        double dist = dist_matrix[src][depot];
+
+        // Pula os depositos inalcancaveis a partir do vertice atual
+        if(dist == numeric_limits<double>::max()) continue;
+        
+        if(dist < min_dist){
+            min_dist = dist;
+            depot_idx = depot;
+        }
+    }
+
+    return make_pair(min_dist, depot_idx);
+}
+
+// Retorna o indice do veiculo com menor tempo gasto (livre mais cedo)
+int getMinMakespanVehicle(
+    const vector<double>& vehicle_times, 
+    const Instance& instance
+){
+    auto min_makespan = min_element(vehicle_times.begin(), vehicle_times.end());
+    int vehicle = distance(vehicle_times.begin(), min_makespan);
+    return vehicle;
 }

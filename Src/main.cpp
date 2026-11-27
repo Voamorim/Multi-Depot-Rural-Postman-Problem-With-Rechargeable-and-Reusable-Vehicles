@@ -2,6 +2,7 @@
 #include "instance.hpp"
 #include "mt.hpp"
 #include "args.hpp"
+#include "evaluate.hpp"
 
 #include <vector>
 #include <set>
@@ -49,7 +50,7 @@ int main(int argc, char** argv){
     cout << "Feasible? " << fo.feasible << endl;
 
     // Converte para uma representacao mais facil de varrer a vizinhanca
-    vector<vector<Node>> solution2d = convert3dSolutionTo2d(routes, instance);
+    Solution2D solution2d = convert3dSolutionTo2d(routes, instance);
 
     return 0;
 }

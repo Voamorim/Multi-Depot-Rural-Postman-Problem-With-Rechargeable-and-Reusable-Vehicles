@@ -1,56 +1,10 @@
 #include "mt.hpp"
 
 // Retorna um conjunto com todas as arestas obrigatorias 
-vector<pair<int, int>> getRequiredEdges(
-    const Instance& instance
-){
-    vector<pair<int, int>> remaining_required_edges;
-
-    for(int i = 0; i < instance.n_required_edges; ++i){
-        int edge_idx = instance.required_edges[i];
-
-        const Edge& edge = instance.edges[edge_idx];
-
-        pair<int, int> e = make_pair(edge.from, edge.to);
-        remaining_required_edges.push_back(e);
-    }
-
-    return remaining_required_edges;
-}
+vector<pair<int, int>> getRequiredEdges(const Instance& instance);
 
 // Retorna o indice do veiculo com menor tempo gasto (livre mais cedo)
-int getMinMakespanVehicle(
-    const vector<double>& vehicle_times, 
-    const Instance& instance
-){
-    auto min_makespan = min_element(vehicle_times.begin(), vehicle_times.end());
-    int vehicle = distance(vehicle_times.begin(), min_makespan);
-    return vehicle;
-}
-
-// Retorna qual o deposito mais proximo do vertice src 
-pair<double, int> getNearestDepot(
-    const int src, 
-    const vector<vector<double>> &dist_matrix, 
-    const Instance& instance
-){
-    double min_dist = numeric_limits<double>::max();
-    int depot_idx = -1;
-
-    for(const auto depot : instance.depots){
-        double dist = dist_matrix[src][depot];
-
-        // Pula os depositos inalcancaveis a partir do vertice atual
-        if(dist == numeric_limits<double>::max()) continue;
-        
-        if(dist < min_dist){
-            min_dist = dist;
-            depot_idx = depot;
-        }
-    }
-
-    return make_pair(min_dist, depot_idx);
-}
+int getMinMakespanVehicle(const vector<double>& vehicle_times, const Instance& instance);
 
 // Retorna a aresta obrigatoria escolhida, o caminho ate o final
 // dela, o custo total da operacao e o índice da aresta no vetor
@@ -62,75 +16,10 @@ tuple<pair<int, int>, vector<int>, double, int> nextViableEdge(
     vector<double>& cost_to_edges, 
     Graph& graph, 
     const Instance& instance
-){
-    double min_cost = numeric_limits<double>::max();
-    pair<int, int> chosen_edge = make_pair(-1, -1);
-    vector<int> path;
-    int chosen_idx = -1;
+);
 
-    double remaining_capacity = instance.capacity - used_capacity;
-
-    for(int e = 0; e < remaining_required_edges.size(); ++e){
-        auto [v, u] = remaining_required_edges[e];
-
-        double dv = dist_matrix[src][v];
-        double du = dist_matrix[src][u];
-        double w = graph.getEdge(v, u);
-
-        double curr_min_cost = numeric_limits<double>::max();
-        int from_node = -1, to_node = -1;
-
-        if(src == v){ // Veículo já está no nó de origem da aresta
-            curr_min_cost = w;
-            from_node = v, to_node = u;
-        } else if (src == u and !instance.directed){  // O veículo já está no outro nó da aresta (não direcionado)
-            curr_min_cost = w;
-            from_node = u, to_node = v;
-        } else { // Veículo está em um outro nó qualquer
-            double cost_v = numeric_limits<double>::max();
-            double cost_u = numeric_limits<double>::max();
-
-            if(dv != numeric_limits<double>::max()) 
-                cost_v = dv + w;
-            if(!instance.directed and du != numeric_limits<double>::max()) 
-                cost_u = du + w;
-           
-            if(cost_v <= cost_u and cost_v != numeric_limits<double>::max()){
-                curr_min_cost = cost_v;
-                from_node = v, to_node = u;
-            } else if (cost_u < cost_v){
-                curr_min_cost = cost_u;
-                from_node = u, to_node = v;
-            }
-        }
-
-        cost_to_edges[e] = curr_min_cost;
-
-        if(curr_min_cost <= remaining_capacity + EPS) {
-            int next_depot;
-            double dist_to_depot;
-            tie(dist_to_depot, next_depot) = getNearestDepot(to_node, dist_matrix, instance);
-
-            if(next_depot != -1 and (curr_min_cost + dist_to_depot <= remaining_capacity + EPS)){
-                if(curr_min_cost < min_cost){
-                    min_cost = curr_min_cost;
-                    chosen_edge = make_pair(from_node, to_node);
-                    chosen_idx = e;
-
-                    if(src != from_node){
-                        path = graph.getPath(src, from_node);
-                        path.push_back(to_node);
-                    } else {
-                        path = {src, to_node};
-                    }
-                }
-            }
-        }
-    }
-
-    return make_tuple(chosen_edge, path, min_cost, chosen_idx);
-}
-
+// Retorna o depósito que se aproxima mais de uma aresta obrigatória (não permite retornar
+// o depósito atual)
 pair<double, int> getClosestFeasibleDepot(
     const int curr_node,
     const double used_capacity,
@@ -139,65 +28,7 @@ pair<double, int> getClosestFeasibleDepot(
     const vector<vector<double>>& dist_matrix,
     Graph& graph,
     const Instance& instance
-){
-    int closest_depot = -1;
-    double min_total_dist_via_depot = numeric_limits<double>::max();
-    double chosen_dist_to_depot = numeric_limits<double>::max(); 
-    double remaining_capacity = instance.capacity - used_capacity;
-
-    auto [v, u] = remaining_required_edges[nearest_edge_idx];
-    double edge_w = graph.getEdge(v, u);
-
-    for(int depot : instance.depots){
-        // Se o veiculo ja esta neste deposito, nao pode escolher ele
-        if(depot == curr_node) continue;
-
-        double curr_to_depot = dist_matrix[curr_node][depot];
-        if(curr_to_depot > remaining_capacity + EPS or 
-           curr_to_depot == numeric_limits<double>::max()){
-           continue;
-        }
-       
-        // Calcula o custo de sair de depot e cobrir a aresta mais proxima
-        double dist_v = dist_matrix[depot][v];
-        double dist_u = numeric_limits<double>::max();
-        if(!instance.directed)
-            dist_u = dist_matrix[depot][u];
-        
-        double depot_to_edge_cost = numeric_limits<double>::max(); 
-       
-        if(depot == v){
-            depot_to_edge_cost = edge_w;
-        } else if (depot == u and !instance.directed){
-            depot_to_edge_cost = edge_w;
-        } else {
-            double cost_v = numeric_limits<double>::max();
-            double cost_u = numeric_limits<double>::max();
-
-            if(dist_v != numeric_limits<double>::max()){
-                cost_v = dist_v + edge_w;
-            }
-            if(!instance.directed and dist_u != numeric_limits<double>::max()){
-                cost_u = dist_u + edge_w;
-            }
-
-            depot_to_edge_cost = min(cost_v, cost_u);
-        }
-
-        if(depot_to_edge_cost == numeric_limits<double>::max()) continue;
-
-        // Ir ate o deposito + ir do deposito ate o final da aresta
-        double total_cost_via_depot = curr_to_depot + depot_to_edge_cost;
-
-        if(total_cost_via_depot < min_total_dist_via_depot){
-            min_total_dist_via_depot = total_cost_via_depot;
-            closest_depot = depot;
-            chosen_dist_to_depot = curr_to_depot;
-        }
-    }
-
-    return make_pair(chosen_dist_to_depot, closest_depot);
-}
+);
 
 tuple<FO, vector<vector<vector<int>>>> MT(
     Graph& graph, 
@@ -377,4 +208,169 @@ tuple<FO, vector<vector<vector<int>>>> MT(
     );
 
     return make_tuple(fo, routes);
+}
+
+// Retorna um conjunto com todas as arestas obrigatorias 
+vector<pair<int, int>> getRequiredEdges(
+    const Instance& instance
+){
+    vector<pair<int, int>> remaining_required_edges;
+
+    for(int i = 0; i < instance.n_required_edges; ++i){
+        int edge_idx = instance.required_edges[i];
+
+        const Edge& edge = instance.edges[edge_idx];
+
+        pair<int, int> e = make_pair(edge.from, edge.to);
+        remaining_required_edges.push_back(e);
+    }
+
+    return remaining_required_edges;
+}
+
+// Retorna a aresta obrigatoria escolhida, o caminho ate o final
+// dela, o custo total da operacao e o índice da aresta no vetor
+tuple<pair<int, int>, vector<int>, double, int> nextViableEdge(
+    const int src, 
+    const double used_capacity, 
+    const vector<pair<int, int>>& remaining_required_edges, 
+    const vector<vector<double>>& dist_matrix,
+    vector<double>& cost_to_edges, 
+    Graph& graph, 
+    const Instance& instance
+){
+    double min_cost = numeric_limits<double>::max();
+    pair<int, int> chosen_edge = make_pair(-1, -1);
+    vector<int> path;
+    int chosen_idx = -1;
+
+    double remaining_capacity = instance.capacity - used_capacity;
+
+    for(int e = 0; e < remaining_required_edges.size(); ++e){
+        auto [v, u] = remaining_required_edges[e];
+
+        double dv = dist_matrix[src][v];
+        double du = dist_matrix[src][u];
+        double w = graph.getEdge(v, u);
+
+        double curr_min_cost = numeric_limits<double>::max();
+        int from_node = -1, to_node = -1;
+
+        if(src == v){ // Veículo já está no nó de origem da aresta
+            curr_min_cost = w;
+            from_node = v, to_node = u;
+        } else if (src == u and !instance.directed){  // O veículo já está no outro nó da aresta (não direcionado)
+            curr_min_cost = w;
+            from_node = u, to_node = v;
+        } else { // Veículo está em um outro nó qualquer
+            double cost_v = numeric_limits<double>::max();
+            double cost_u = numeric_limits<double>::max();
+
+            if(dv != numeric_limits<double>::max()) 
+                cost_v = dv + w;
+            if(!instance.directed and du != numeric_limits<double>::max()) 
+                cost_u = du + w;
+           
+            if(cost_v <= cost_u and cost_v != numeric_limits<double>::max()){
+                curr_min_cost = cost_v;
+                from_node = v, to_node = u;
+            } else if (cost_u < cost_v){
+                curr_min_cost = cost_u;
+                from_node = u, to_node = v;
+            }
+        }
+
+        cost_to_edges[e] = curr_min_cost;
+
+        if(curr_min_cost <= remaining_capacity + EPS) {
+            int next_depot;
+            double dist_to_depot;
+            tie(dist_to_depot, next_depot) = getNearestDepot(to_node, dist_matrix, instance);
+
+            if(next_depot != -1 and (curr_min_cost + dist_to_depot <= remaining_capacity + EPS)){
+                if(curr_min_cost < min_cost){
+                    min_cost = curr_min_cost;
+                    chosen_edge = make_pair(from_node, to_node);
+                    chosen_idx = e;
+
+                    if(src != from_node){
+                        path = graph.getPath(src, from_node);
+                        path.push_back(to_node);
+                    } else {
+                        path = {src, to_node};
+                    }
+                }
+            }
+        }
+    }
+
+    return make_tuple(chosen_edge, path, min_cost, chosen_idx);
+}
+
+pair<double, int> getClosestFeasibleDepot(
+    const int curr_node,
+    const double used_capacity,
+    const int nearest_edge_idx, 
+    const vector<pair<int, int>>& remaining_required_edges,
+    const vector<vector<double>>& dist_matrix,
+    Graph& graph,
+    const Instance& instance
+){
+    int closest_depot = -1;
+    double min_total_dist_via_depot = numeric_limits<double>::max();
+    double chosen_dist_to_depot = numeric_limits<double>::max(); 
+    double remaining_capacity = instance.capacity - used_capacity;
+
+    auto [v, u] = remaining_required_edges[nearest_edge_idx];
+    double edge_w = graph.getEdge(v, u);
+
+    for(int depot : instance.depots){
+        // Se o veiculo ja esta neste deposito, nao pode escolher ele
+        if(depot == curr_node) continue;
+
+        double curr_to_depot = dist_matrix[curr_node][depot];
+        if(curr_to_depot > remaining_capacity + EPS or 
+           curr_to_depot == numeric_limits<double>::max()){
+           continue;
+        }
+       
+        // Calcula o custo de sair de depot e cobrir a aresta mais proxima
+        double dist_v = dist_matrix[depot][v];
+        double dist_u = numeric_limits<double>::max();
+        if(!instance.directed)
+            dist_u = dist_matrix[depot][u];
+        
+        double depot_to_edge_cost = numeric_limits<double>::max(); 
+       
+        if(depot == v){
+            depot_to_edge_cost = edge_w;
+        } else if (depot == u and !instance.directed){
+            depot_to_edge_cost = edge_w;
+        } else {
+            double cost_v = numeric_limits<double>::max();
+            double cost_u = numeric_limits<double>::max();
+
+            if(dist_v != numeric_limits<double>::max()){
+                cost_v = dist_v + edge_w;
+            }
+            if(!instance.directed and dist_u != numeric_limits<double>::max()){
+                cost_u = dist_u + edge_w;
+            }
+
+            depot_to_edge_cost = min(cost_v, cost_u);
+        }
+
+        if(depot_to_edge_cost == numeric_limits<double>::max()) continue;
+
+        // Ir ate o deposito + ir do deposito ate o final da aresta
+        double total_cost_via_depot = curr_to_depot + depot_to_edge_cost;
+
+        if(total_cost_via_depot < min_total_dist_via_depot){
+            min_total_dist_via_depot = total_cost_via_depot;
+            closest_depot = depot;
+            chosen_dist_to_depot = curr_to_depot;
+        }
+    }
+
+    return make_pair(chosen_dist_to_depot, closest_depot);
 }

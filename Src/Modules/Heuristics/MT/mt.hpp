@@ -5,6 +5,7 @@
 #include "instance.hpp"
 #include "md_rpp_rrv.hpp"
 #include "utils.hpp"
+#include "evaluate.hpp"
 
 #include <vector>
 #include <tuple>

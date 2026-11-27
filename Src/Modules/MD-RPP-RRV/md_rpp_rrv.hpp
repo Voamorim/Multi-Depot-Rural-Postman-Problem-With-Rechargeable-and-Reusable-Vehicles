@@ -11,48 +11,6 @@
 
 using namespace std;
 
-struct Penalties {
-    double missing_edges;
-    double battery_excess;
-    double unnecessary_trips;
-    double unvisited_required_edges;
-    double invalid_depots;
-};
-
-struct FO {
-    double makespan;
-    vector<double> vehicle_times;
-    vector<int> trips_counter;
-    bool feasible;
-
-    int missing_edges;
-    double battery_excess;
-    int unnecessary_trips;
-    int unvisited_required_edges;
-    int invalid_depots;
-
-    double getFitness(const Penalties& penalties) const {
-        if(feasible) return makespan;
-
-        double penalty_cost = 0.0;
-        penalty_cost += missing_edges * penalties.missing_edges;
-        penalty_cost += battery_excess * penalties.battery_excess;
-        penalty_cost += unnecessary_trips * penalties.unnecessary_trips;
-        penalty_cost += invalid_depots * penalties.invalid_depots;
-
-        return makespan + penalty_cost;
-    }
-};
-
-Penalties getPenalties(const Instance& instance);
-
-// Calcula estritamente a FO
-FO evaluate(
-    const vector<vector<vector<int>>> &routes,      // Vetor de rotas, por veiculo
-    Graph& graph, 
-    const Instance& instance                        // Valores da instancia 
-);
-
 enum NodeType {
     DEPOT,
     REQ_EDGE
@@ -65,7 +23,13 @@ struct Node {
     int edge_id;        // Identificador da aresta (-1 se for deposito)
 };
 
-vector<vector<Node>> convert3dSolutionTo2d(
+struct Solution2D {
+    vector<vector<Node>> vechicle_routes;
+    vector<vector<int>> depots_idx;         // Índices dos depósitos na rota de cada veículo
+    vector<vector<int>> req_edges_idx;      // Índices das arestas obrigatórias na rota de cada veículo
+};
+
+Solution2D convert3dSolutionTo2d(
     const vector<vector<vector<int>>> &routes,
     const Instance& instance
 );
@@ -73,6 +37,19 @@ vector<vector<Node>> convert3dSolutionTo2d(
 vector<vector<vector<int>>> convert2dSolutionTo3d(
     const vector<vector<Node>> &routes,
     Graph& graph,
+    const Instance& instance
+);
+
+// Retorna qual o deposito mais proximo do vertice src 
+pair<double, int> getNearestDepot(
+    const int src, 
+    const vector<vector<double>> &dist_matrix, 
+    const Instance& instance
+);
+
+// Retorna o indice do veiculo com menor tempo gasto (livre mais cedo)
+int getMinMakespanVehicle(
+    const vector<double>& vehicle_times, 
     const Instance& instance
 );
 
