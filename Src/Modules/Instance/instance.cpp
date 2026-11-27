@@ -11,12 +11,11 @@ Instance readInstance(ifstream& input_file, double recharge_time)
 
     // Depositos
     input_file >> instance.n_depots;
-    vector<int> depots;
     for(int i = 0; i < instance.n_depots; ++i){
         int depot_node;
         input_file >> depot_node;
         instance.depots.insert(depot_node);
-        depots.push_back(depot_node);
+        instance.depots_vec.push_back(depot_node);
     }
 
     // Qtd. veiculos
@@ -94,7 +93,7 @@ Instance readInstance(ifstream& input_file, double recharge_time)
             if(p > instance.n_depots - 1){
                 p = 0;
             }
-            vehicles_per_depot[p].push_back(depots[p]);
+            vehicles_per_depot[p].push_back(instance.depots_vec[p]);
             p += 1;
         }
 
@@ -105,7 +104,6 @@ Instance readInstance(ifstream& input_file, double recharge_time)
         }
     }
  
-
     // IMPORTANTE: isso só vale para as instâncias do Set A 
     if(recharge_time == -1)
         instance.recharge_time = 2.0 * instance.capacity;    

@@ -21,7 +21,8 @@ struct Instance {
 
     int n_depots;
     set<int> depots;
-    
+    vector<int> depots_vec;
+
     int n_vehicles;
     double capacity;
 
